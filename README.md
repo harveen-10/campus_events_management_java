@@ -6,12 +6,13 @@
 
 ``` npm run dev ```
 
-### Create a .env file in the backend folder. In that add your mysql password and database name in this way-
+## Ignore the backend folder while running.
 
-PASSWORD= password
 
-DATABASE= database-name
+### In backend-java/src/main/resources/application.properties-
+
+Change the password to your MySQL password
 
 ### To run backend
 
-``` node server.js ```
+``` mvn spring-boot:run ```
