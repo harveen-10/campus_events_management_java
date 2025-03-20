@@ -1,13 +1,9 @@
 package com.example.repository;
 
-import com.example.demo.Event;
-import com.example.demo.Organizer;
-import com.example.demo.Sponsor;
-import com.example.demo.Participant;
-import com.example.demo.Guest;
-import com.example.demo.Finance;
+import com.example.demo.*;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.query.Procedure;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,4 +37,14 @@ public interface EventRepository extends JpaRepository<Event, String> {
     // Fetch finances for a specific event
     @Query("SELECT f FROM Finance f WHERE f.financeId.eventID = :eventId")
     List<Finance> findFinancesByEventId(@Param("eventId") String eventId);
+
+    @Query("SELECT s FROM Sponsor s WHERE s.id.id = :id")
+    Optional<Sponsor> getSponsorById(@Param("id") String id);
+
+    @Query("SELECT g FROM Guest g WHERE g.guestId.ID = :id")
+    Optional<Guest> findGuestById(@Param("id") String id);
+
+    @Query("SELECT f FROM Finance f WHERE f.financeId.transID = :transID")
+    Optional<Finance> getFinanceByTransID(@Param("transID") String transID);
 }
+

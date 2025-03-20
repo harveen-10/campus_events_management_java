@@ -1,10 +1,12 @@
 package com.example.controller;
 
 import com.example.demo.*;
-import com.example.repository.EventRepository;
+import com.example.repository.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -16,9 +18,13 @@ import java.util.Optional;
 public class EventController {
 
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
 
-    public EventController(EventRepository eventRepository) {
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    public EventController(EventRepository eventRepository, UserRepository userRepository) {
         this.eventRepository = eventRepository;
+        this.userRepository = userRepository; 
     }
 
     // GET all events (like `/home` route in Node.js)
@@ -161,6 +167,97 @@ public class EventController {
 
         public double getTotalAmountSpent() {
             return totalAmountSpent;
+        }
+    }
+
+    @GetMapping("/sponsorByID")
+    public ResponseEntity<?> getSponsorByID(@RequestParam String sponsorID) {
+        if (sponsorID == null || sponsorID.isEmpty()) {
+            return ResponseEntity.badRequest().body("SponsorID is required.");
+        }
+
+        Optional<Sponsor> sponsor = eventRepository.getSponsorById(sponsorID);
+
+        if (sponsor.isPresent()) {
+            return ResponseEntity.ok(sponsor.get());
+        } else {
+            return ResponseEntity.status(404).body("Sponsor not found.");
+        }
+    }
+
+    @GetMapping("/GuestByID")
+    public ResponseEntity<?> getGuestById(@RequestParam String guestID) {
+        if (guestID == null || guestID.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Guest ID is required.");
+        }
+
+        Optional<Guest> guest = eventRepository.findGuestById(guestID);
+
+        if (guest.isEmpty()) {
+            return ResponseEntity.status(404).body("Guest not found.");
+        }
+
+        return ResponseEntity.ok(guest.get());
+    }
+
+    @GetMapping("/FinanceByID")
+    public ResponseEntity<?> getFinanceByID(@RequestParam String transID) {
+        if (transID == null || transID.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("TransID is required.");
+        }
+
+        Optional<Finance> finance = eventRepository.getFinanceByTransID(transID);
+
+        if (finance.isEmpty()) {
+            return ResponseEntity.status(404).body("Finance record not found.");
+        }
+
+        return ResponseEntity.ok(finance.get());
+    }
+
+    
+
+    @PostMapping("/signup")
+    public ResponseEntity<String> signup(@RequestBody User user) {
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new IllegalArgumentException("Password cannot be null or empty");
+        }
+
+        if (user.getSrn() == null || user.getSrn().trim().isEmpty()) {
+            System.out.println("SRN validation failed");
+            return ResponseEntity.badRequest().body("SRN is required.");
+        }
+
+        Optional<User> existingUser = userRepository.findBySrn(user.getSrn());
+        if (existingUser.isPresent()) {
+            System.out.println("User already exists: " + user.getSrn());
+            return ResponseEntity.badRequest().body("This SRN already exists. Try logging in.");
+        }
+
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        userRepository.save(user);
+
+        return ResponseEntity.ok("Signup successful");
+    }
+
+    @PostMapping("/login")
+    public String login(@RequestBody User loginRequest) {
+        if (loginRequest.getSrn() == null || loginRequest.getSrn().trim().isEmpty()) {
+            return "SRN is required";
+        }
+
+        Optional<User> userOptional = userRepository.findBySrn(loginRequest.getSrn());
+
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            if (passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                return "Login successful";
+            } else {
+                return "Incorrect password";
+            }
+        } else {
+            return "User not found";
         }
     }
 
