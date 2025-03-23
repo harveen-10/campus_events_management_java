@@ -9,7 +9,6 @@ import java.math.BigDecimal;
 public class Finance {
 
     @EmbeddedId
-    @JsonIgnore  // Prevents serialization issues
     private FinanceId financeId;
 
     private String spentOn;

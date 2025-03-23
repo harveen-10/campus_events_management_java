@@ -4,14 +4,20 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class GuestId implements Serializable {
-    private String ID;
-    private String EventID;
+    private String id;
+    private String eventID;
 
     public GuestId() {}
 
-    public GuestId(String ID, String EventID) {
-        this.ID = ID;
-        this.EventID = EventID;
+    public GuestId(String id, String eventID) {
+        this.id = id;
+        this.eventID = eventID;
+    }
+    public String getEventID() {
+        return eventID;
+    }
+    public String getId() {
+        return id;
     }
 
     @Override
@@ -19,11 +25,11 @@ public class GuestId implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         GuestId guestId = (GuestId) o;
-        return Objects.equals(ID, guestId.ID) && Objects.equals(EventID, guestId.EventID);
+        return Objects.equals(id, guestId.id) && Objects.equals(eventID, guestId.eventID);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(ID, EventID);
+        return Objects.hash(id, eventID);
     }
 }

@@ -8,41 +8,42 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Guest {
 
     @EmbeddedId
-    @JsonIgnore  // Prevents serialization issue
     private GuestId guestId;
 
-    private String Name;
-    private String Email;
-    private String Role;
+    @Column(name = "Name", length = 255)
+    private String name;
+
+    @Column(name = "Email", length = 255)
+    private String email;
+
+    @Column(name = "Role", length = 255)
+    private String role;
+
+    @Column(name = "phone_no", length = 255)
     private String phone_no;
 
     public Guest() {}
 
-    public Guest(GuestId guestId, String Name, String Email, String Role, String phone_no) {
+    public Guest(GuestId guestId, String name, String email, String role, String phone_no) {
         this.guestId = guestId;
-        this.Name = Name;
-        this.Email = Email;
-        this.Role = Role;
+        this.name = name;
+        this.email = email;
+        this.role = role;
         this.phone_no = phone_no;
     }
 
-    public GuestId getGuestId() {
-        return guestId;
-    }
+    public GuestId getGuestId() {return guestId;}
+    public void setGuestId(GuestId guestId) { this.guestId = guestId; }
 
-    public String getName() {
-        return Name;
-    }
+    public String getName() {return name;}
+    public void setName(String name) { this.name = name; }
 
-    public String getEmail() {
-        return Email;
-    }
+    public String getEmail() {return email;}
+    public void setEmail(String email) { this.email = email; }
 
-    public String getRole() {
-        return Role;
-    }
+    public String getRole() {return role;}
+    public void setRole(String role) { this.role = role; }
 
-    public String getPhone_no() {
-        return phone_no;
-    }
+    public String getPhone_no() {return phone_no;}
+    public void setPhone_no(String phone_no) { this.phone_no = phone_no; }
 }

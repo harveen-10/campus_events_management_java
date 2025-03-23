@@ -25,10 +25,10 @@ public class Event {
     @Column(name = "Poster", columnDefinition = "TEXT")
     private String poster;
 
-    @Column(name = "S_time")
+    @Column(name = "s_time")
     private String startTime;
 
-    @Column(name = "E_time")
+    @Column(name = "e_time")
     private String endTime;
 
     @Column(name = "ecode", length = 20)

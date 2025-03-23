@@ -14,6 +14,13 @@ public class SponsorId implements Serializable {
         this.id = id;
         this.eventID = eventID;
     }
+    public String getEventID() {
+        return eventID;
+    }
+    public String getId() {
+        return id;
+    }
+
 
     @Override
     public boolean equals(Object o) {

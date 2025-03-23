@@ -13,6 +13,14 @@ public class FinanceId implements Serializable {
         this.transID = transID;
         this.eventID = eventID;
     }
+    
+    public String getEventID() {
+        return eventID;
+    }
+
+    public String getTransID() { 
+        return transID;
+    }
 
     @Override
     public boolean equals(Object o) {

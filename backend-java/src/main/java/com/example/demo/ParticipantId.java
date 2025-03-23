@@ -15,6 +15,13 @@ public class ParticipantId implements Serializable {
         this.eventID = eventID;
     }
 
+    public String getEventID() {
+        return eventID;
+    }
+    public String getSrn() {
+        return srn;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

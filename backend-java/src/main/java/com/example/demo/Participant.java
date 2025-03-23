@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Participant {
 
     @EmbeddedId
-    @JsonIgnore  // Prevents serialization issue
     private ParticipantId id;  // Composite Key (srn + eventID)
 
     @Column(name = "Name", length = 100)

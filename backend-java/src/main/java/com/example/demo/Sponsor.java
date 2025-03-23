@@ -8,7 +8,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Sponsor {
 
     @EmbeddedId
-    @JsonIgnore  // Prevents serialization issue
     private SponsorId id;  // Composite Key (ID + EventID)
 
     @Column(name = "Name", length = 100, nullable = false)
