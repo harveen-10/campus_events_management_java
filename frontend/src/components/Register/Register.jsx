@@ -18,7 +18,7 @@ function Register() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/eventdetails?eventId=${eventID}`, {
+                const response = await fetch(`http://localhost:8080/events/eventdetails?eventId=${eventID}`, {
                     method: "GET",
                     headers: {
                         'Content-Type': "application/json",
@@ -27,14 +27,14 @@ function Register() {
 
                 const data = await response.json();
                 console.log(data);
-                setTeamSize(data.TeamSize);
-                console.log("Teamsize", data.TeamSize);
+                setTeamSize(data.teamSize);
+                console.log("Teamsize", data.teamSize);
 
-                const initialParticipants = Array(data.TeamSize).fill({
+                const initialParticipants = Array(data.teamSize).fill({
                     srn: '',
                     name: '',
                     email: '',
-                    phone: ''
+                    phoneNo: ''
                 });
                 setParticipants(initialParticipants);
 
@@ -55,25 +55,37 @@ function Register() {
             };
             return updatedParticipants; // Return the updated array
         });
+
+        console.log("participants is getting updated: ", participants);
     };
 
     const handleRegister = async () => {
+        setError(null); // Reset error when clicking Register again
+        setSuccessMessage(''); // Reset success message as well
+        console.log("current error: ", error);
+        console.log("current success: ", successMessage)
+
         if (teamSize > 1 && !teamName) {
             setError("Please enter a team name for team registration.");
             return;
         }
 
         try {
-            const response = await fetch('http://localhost:3000/register', {
+            console.log("data going to backend: ", JSON.stringify({ eventID, participants, teamName }));
+            const response = await fetch('http://localhost:8080/events/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ eventID, participants, teamName })
             });
-
-            // if (!response.ok) {
-            //     throw new Error("Registration failed");
-            // }
-
+            
+            const responseData = await response.text();
+            console.log("responseData: ", responseData);
+            console.log("RESPONSE: ", response);
+            if (!response.ok){
+                setError(responseData);
+                return;
+            }
+      
             setSuccessMessage("Registration successful!"); // Show success message
 
             // After 3 seconds, navigate to the home page
@@ -86,6 +98,12 @@ function Register() {
             setError("An error occurred during registration.");
         }
     };
+
+    // Track error and success message changes using useEffect
+    useEffect(() => {
+        console.log("Updated error state:", error);
+        console.log("Updated success state:", successMessage);
+    }, [error, successMessage]);
 
     return (
         <>
@@ -162,8 +180,8 @@ function Register() {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                         <input 
                             type="text" 
-                            value={participant.phone} 
-                            onChange={(e) => handleInputChange(index, 'phone', e.target.value)}
+                            value={participant.phoneNo} 
+                            onChange={(e) => handleInputChange(index, 'phoneNo', e.target.value)}
                             className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                             placeholder="Enter Phone Number" 
                         />

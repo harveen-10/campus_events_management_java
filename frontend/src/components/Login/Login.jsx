@@ -15,7 +15,7 @@ function Login() {
         console.log(user);
 
         try{
-            const response=await fetch(`http://localhost:3000/login`, {
+            const response=await fetch(`http://localhost:8080/events/login`, {
                 method: "POST",
                 headers: {
                     'Content-Type': "application/json",
@@ -25,7 +25,7 @@ function Login() {
 
             const responseData = await response.text();
             
-            if(responseData==="Incorrect password" || responseData==="User not found" || responseData==="SRN is required" || responseData==="Error comparing password:"){
+            if(responseData==="Incorrect password" || responseData==="User not found" || responseData==="SRN is required"){
                 setResponseMessage(responseData);
             }
             else if(response.ok){

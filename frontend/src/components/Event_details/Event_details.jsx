@@ -20,7 +20,7 @@ function Event_details() {
 
         const fetchData = async () => {
             try {
-                const response = await fetch(`http://localhost:3000/eventdetails?eventId=${newUser.eventID}`, {
+                const response = await fetch(`http://localhost:8080/events/eventdetails?eventId=${newUser.eventID}`, {
                     method: "GET",
                     headers: {
                         'Content-Type': "application/json",
@@ -28,8 +28,9 @@ function Event_details() {
                 });
 
                 const data = await response.json();
-                console.log(data)
+                console.log(data);
                 setEventDetails(data); 
+                console.log("Event details: ", eventDetails);
 
             } catch (error) {
                 console.error('Error fetching data: ', error);
@@ -45,7 +46,7 @@ function Event_details() {
     }
     
 
-    const eventDate = new Date(eventDetails.Event_date);
+    const eventDate = new Date(eventDetails.eventDate);
     const getDaySuffix = (day) => {
         if (day >= 11 && day <= 13) {
             return `${day}th`;
@@ -74,8 +75,8 @@ function Event_details() {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
-    const startTimeFormatted = formatTime(eventDetails.S_time);
-    const endTimeFormatted = formatTime(eventDetails.E_time);
+    const startTimeFormatted = formatTime(eventDetails.startTime);
+    const endTimeFormatted = formatTime(eventDetails.endTime);
 
     const handleRegister = () => {
         navigate("/register", { state: { newUser } });
@@ -92,19 +93,19 @@ function Event_details() {
             </button>
             <div 
             className="w-full max-w-[60%] h-[63vh] bg-cover bg-center relative" 
-            style={{ backgroundImage: `url(${eventDetails.Poster})`, objectFit: 'contain' }}
+            style={{ backgroundImage: `url(${eventDetails.poster})`, objectFit: 'contain' }}
             >
             </div>
 
 
             <div className="mt-8 text-center max-w-4xl mx-auto">
-                <h1 className="text-3xl font-semibold mb-4">{eventDetails.Ename}</h1>
-                <p className="text-xl"><strong>Category:</strong> {eventDetails.Category}</p>
+                <h1 className="text-3xl font-semibold mb-4">{eventDetails.ename}</h1>
+                <p className="text-xl"><strong>Category:</strong> {eventDetails.category}</p>
                 <p className="text-xl"><strong>Event Date:</strong> {formattedEventDate}</p>
-                <p className="text-xl"><strong>Domain:</strong> {eventDetails.Domain}</p>
+                <p className="text-xl"><strong>Domain:</strong> {eventDetails.domain}</p>
                 <p className="text-xl"><strong>Start Time:</strong> {startTimeFormatted}</p>
                 <p className="text-xl"><strong>End Time:</strong> {endTimeFormatted}</p>
-                <p className="text-xl"><strong>Team Size:</strong> {eventDetails.TeamSize}</p>
+                <p className="text-xl"><strong>Team Size:</strong> {eventDetails.teamSize}</p>
             </div>
             <div className="mt-8 w-full flex justify-end">
                 <button

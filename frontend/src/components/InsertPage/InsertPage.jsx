@@ -6,7 +6,7 @@ function InsertPage() {
     const { currentUser } = location.state || {};
     console.log(currentUser);
     const navigate = useNavigate();
-    const [formData, setFormData] = useState({ EventID: currentUser.eventID });
+    const [formData, setFormData] = useState({});
     const [error, setError] = useState(null);
 
     const handleChange = (e) => {
@@ -17,40 +17,44 @@ function InsertPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         let url = '';
+        let updatedFormData = { ...formData };
 
         switch (currentUser.tab) {
             case 'sponsors':
-                url = 'http://localhost:3000/sponsorinsert';
+                url = 'http://localhost:8080/events/insertsponsor';
+                updatedFormData = { ...formData, id: { eventID: currentUser.eventID } };
                 break;
             case 'guests':
-                url = 'http://localhost:3000/guestinsert';
+                url = 'http://localhost:8080/events/insertguest';
+                updatedFormData = { ...formData, guestId: { eventID: currentUser.eventID } };
                 break;
             case 'finances':
-                url = 'http://localhost:3000/financeinsert';
+                url = 'http://localhost:8080/events/insertfinance';
+                updatedFormData = { ...formData, financeId: { eventID: currentUser.eventID } };
                 break;
             default:
                 alert("Invalid tab selected.");
                 return;
         }
+        console.log("formData: ", updatedFormData);
 
         try {
+            console.log("formData: ", updatedFormData);
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify(updatedFormData),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to insert data');
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message);
+
+                const srn = { srn: currentUser.srn };
+                navigate("/event_info", { state: { srn } });
             }
-
-            const data = await response.json();
-            alert(data.message);
-
-            const srn = { srn: currentUser.srn };
-            navigate("/event_info", { state: { srn } });
             // navigate('/event_info');
 
         } catch (error) {
@@ -70,7 +74,7 @@ function InsertPage() {
                         <>
                             <input
                                 type="text"
-                                name="Name"
+                                name="name"
                                 placeholder="Name"
                                 onChange={handleChange}
                                 required
@@ -78,7 +82,7 @@ function InsertPage() {
                             />
                             <input
                                 type="email"
-                                name="Email"
+                                name="email"
                                 placeholder="Email"
                                 onChange={handleChange}
                                 required
@@ -86,7 +90,7 @@ function InsertPage() {
                             />
                             <input
                                 type="text"
-                                name="Contribution"
+                                name="contribution"
                                 placeholder="Contribution"
                                 onChange={handleChange}
                                 required
@@ -94,7 +98,7 @@ function InsertPage() {
                             />
                             <input
                                 type="text"
-                                name="phone_no"
+                                name="phoneNo"
                                 placeholder="Phone Number"
                                 onChange={handleChange}
                                 required
@@ -106,7 +110,7 @@ function InsertPage() {
                         <>
                             <input
                                 type="text"
-                                name="Name"
+                                name="name"
                                 placeholder="Name"
                                 onChange={handleChange}
                                 required
@@ -114,7 +118,7 @@ function InsertPage() {
                             />
                             <input
                                 type="email"
-                                name="Email"
+                                name="email"
                                 placeholder="Email"
                                 onChange={handleChange}
                                 required
@@ -122,7 +126,7 @@ function InsertPage() {
                             />
                             <input
                                 type="text"
-                                name="Role"
+                                name="role"
                                 placeholder="Role"
                                 onChange={handleChange}
                                 required
@@ -142,7 +146,7 @@ function InsertPage() {
                         <>
                             <input
                                 type="text"
-                                name="SpentOn"
+                                name="spentOn"
                                 placeholder="Spent on"
                                 onChange={handleChange}
                                 required
@@ -150,7 +154,7 @@ function InsertPage() {
                             />
                             <input
                                 type="number"
-                                name="Amount"
+                                name="amount"
                                 placeholder="Amount"
                                 onChange={handleChange}
                                 required
@@ -158,7 +162,7 @@ function InsertPage() {
                             />
                             <input
                                 type="text"
-                                name="Receipt"
+                                name="receipt"
                                 placeholder="Receipt"
                                 onChange={handleChange}
                                 required

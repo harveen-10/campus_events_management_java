@@ -21,11 +21,12 @@ function Event_info() {
 
     const fetchEvents = async () => {
         try {
-            const response = await fetch(`http://localhost:3000/organizingdetails?srn=${srn.srn}`);
+            const response = await fetch(`http://localhost:8080/events/organizingdetails?srn=${srn.srn}`);
             if (!response.ok) {
                 throw new Error('Failed to fetch events');
             }
             const data = await response.json();
+            // console.log(data);
             setEvents(data); // Store event details
         } catch (error) {
             console.error("Error fetching event details:", error);
@@ -35,48 +36,56 @@ function Event_info() {
 
 
     useEffect(() => {
+        console.log("srn in useeffect: ", srn);
         if (srn) {
             fetchEvents(); // Fetch events if SRN is available
         }
     }, [srn]);
 
+
     useEffect(() => {
+        console.log("in useeffect!!!!");
         const fetchEventData = async () => {
+            console.log("eventID: ", eventID);
+            console.log("in fetch event data function!!");
             if (eventID) {
                 try {
                     let url = '';
                     switch (selectedTab) {
                         case 'organizers':
-                            url = `http://localhost:3000/organizers?eventID=${eventID}`;
+                            url = `http://localhost:8080/events/organizers?eventID=${eventID}`;
                             break;
                         case 'participants':
-                            url = `http://localhost:3000/participants?eventID=${eventID}`;
+                            url = `http://localhost:8080/events/participants?eventID=${eventID}`;
                             break;
                         case 'sponsors':
-                            url = `http://localhost:3000/sponsors?eventID=${eventID}`;
+                            url = `http://localhost:8080/events/sponsors?eventID=${eventID}`;
                             break;
                         case 'guests':
-                            url = `http://localhost:3000/guests?eventID=${eventID}`;
+                            url = `http://localhost:8080/events/guests?eventID=${eventID}`;
                             break;
                         case 'finances':
-                            url = `http://localhost:3000/finances?eventID=${eventID}`;
+                            url = `http://localhost:8080/events/finances?eventID=${eventID}`;
                             break;
                         default:
                             return;
                     }
-
+                    console.log("url: ", url);
                     const response = await fetch(url);
                     if (!response.ok) {
                         throw new Error('Failed to fetch event data');
                     }
                     const data = await response.json();
+                    console.log("data!!!: ", data);
+                    console.log("selectedTab: ", selectedTab);
                     if (selectedTab === 'finances') {
                         setEventData(data.finances); // Setting the finance data
                         setTotalAmountSpent(data.totalAmountSpent); // Setting the total amount spent
                     } else {
+                        console.log("not finance!");
                         setEventData(data); // For other tabs, just set the event data
                     }
-                    // console.log(data);
+                    console.log("eventData: ", eventData);
 
                 } catch (error) {
                     console.error("Error fetching event data:", error);
@@ -91,10 +100,15 @@ function Event_info() {
     const handleSelectChange = (event) => {
         const selectedEvent = event.target.value;
         setSelectedEvent(selectedEvent);
-        const selectedEventObj = events.find(ev => ev.Ename === selectedEvent);
+        console.log("selectedEvent: ", selectedEvent);
+        const selectedEventObj = events.find(ev => ev.ename === selectedEvent);
+        console.log("selectedEventObj: ", selectedEventObj);
         if (selectedEventObj) {
-            setEventID(selectedEventObj.EventID); // Set the eventID when a new event is selected
+            console.log("ghwuroghwrougrwhugowroguruwrogorw");
+            setEventID(selectedEventObj.eventId); // Set the eventID when a new event is selected
+            console.log("EventID!!!: ", selectedEventObj.eventId);
         }
+        // console.log("EVENT DATA!!!!!!!!: ", eventData);
         setEventData([]);
     };
 
@@ -114,13 +128,14 @@ function Event_info() {
 
     const handleRowClick = (index, item) => {
         setSelectedRow(index); // Select the row
-        // console.log(item.ID);
-        // console.log("current item selected: ", item.ID || item.SRN || item.TransID);
-        setSelectedID(item.ID || item.SRN || item.TransID); // Set the selected ID/SRN for deletion
+        const currId = item?.id?.srn || item?.id?.id || item?.financeId?.transID || item?.srn || item?.guestId.id; 
+        console.log("item: ", item);
+        console.log("item ID: ", currId);
+        setSelectedID(currId); // Set the selected ID/SRN for deletion
     };
 
     const handleDelete = async () => {
-        console.log("while deleting selectedID: ", selectedID);
+        // console.log("while deleting selectedID: ", selectedID);
         if (!selectedID) {
             alert("Please select a row to delete.");
             return;
@@ -133,24 +148,24 @@ function Event_info() {
         // Set URL and body based on the selected tab
         switch (selectedTab) {
             case 'organizers':
-                url = 'http://localhost:3000/deleteorganizerfromevent';
-                curID = { SRN: selectedID };
+                url = 'http://localhost:8080/events/deleteorganizer';
+                curID = { id: { srn: selectedID, eventId: eventID } };
                 break;
             case 'participants':
-                url = 'http://localhost:3000/participantdelete';
-                curID = { SRN: selectedID };
+                url = 'http://localhost:8080/events/deleteparticipant';
+                curID = { id: { srn: selectedID, eventID: eventID } };
                 break;
             case 'sponsors':
-                url = 'http://localhost:3000/sponsordelete';
-                curID = { SponsorID: selectedID };
+                url = 'http://localhost:8080/events/deletesponsor';
+                curID = { id: { id: selectedID, eventID: eventID } };
                 break;
             case 'finances':
-                url = 'http://localhost:3000/financedelete';
-                curID = { TransID: selectedID };
+                url = 'http://localhost:8080/events/deletefinance';
+                curID = { financeId: { transID: selectedID, eventID: eventID } };
                 break;
             case 'guests':
-                url = 'http://localhost:3000/guestdelete';
-                curID = { GuestID: selectedID };
+                url = 'http://localhost:8080/events/deleteguest';
+                curID = { guestId: { id: selectedID, eventID: eventID } };
                 break;
             default:
                 return;
@@ -159,29 +174,29 @@ function Event_info() {
         // Send the DELETE request
         try {
             const response = await fetch(url, {
-                method: 'POST',
+                method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(curID),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to delete data');
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message); // Show success message
+
+                // Remove deleted item from the UI
+                setEventData((prevData) => prevData.filter(item => item.ID !== selectedID && item.srn !== selectedID));
+
+                // Reset selected ID and row
+                setSelectedID(null);
+                setSelectedRow(null);
+
+                setEventData([]);
+                console.log("eventData: ",eventData);
+                setRefreshKey(prev => prev + 1);
             }
 
-            const data = await response.json();
-            alert(data.message); // Show success message
-
-            // Remove deleted item from the UI
-            setEventData((prevData) => prevData.filter(item => item.ID !== selectedID && item.srn !== selectedID));
-
-            // Reset selected ID and row
-            setSelectedID(null);
-            setSelectedRow(null);
-
-            setEventData([]);
-            setRefreshKey(prev => prev + 1);
         } catch (error) {
             console.error("Error deleting data:", error);
             alert("An error occurred while deleting data.");
@@ -208,15 +223,14 @@ function Event_info() {
         }
     };
 
-    console.log(eventID); 
 
     const handleDeleteEvent = async () => {
-        console.log(eventID);    
+        // console.log(eventID);    
         try {
-            const response = await fetch('http://localhost:3000/deleteevent', {
-                method: 'POST',
+            const response = await fetch('http://localhost:8080/events/deleteevent', {
+                method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ EventID: eventID })
+                body: JSON.stringify({ eventId: eventID })
             });
     
             if (response.ok) {
@@ -234,6 +248,8 @@ function Event_info() {
             alert("An error occurred. Please try again.");
         }
     };
+
+    console.log("eventData", eventData);
     
 
     return (
@@ -258,8 +274,8 @@ function Event_info() {
                 >
                     <option value="">-- Select an Event --</option>
                     {events.map((event, index) => (
-                        <option key={index} value={event.Ename}>
-                            {event.Ename}
+                        <option key={index} value={event.ename}>
+                            {event.ename}
                         </option>
                     ))}
                 </select>
@@ -355,8 +371,12 @@ function Event_info() {
                                         onClick={() => handleRowClick(index, item)}
                                         className={`cursor-pointer ${selectedRow === index ? 'bg-gray-300' : ''}`}
                                     >
-                                        {Object.values(item).map((value, idx) => (
-                                            <td key={idx} className="border px-4 py-2">{value}</td>
+                                        {Object.entries(item).map(([key, value], idx) => (
+                                            <td key={idx} className="border px-4 py-2">
+                                                {typeof value === "object" && value !== null
+                                                ? (value.srn || value.transID || value.id || "N/A") // Only show `srn` and ignore `eventID`
+                                                : String(value)}
+                                            </td>
                                         ))}
                                     </tr>
                                 ))}

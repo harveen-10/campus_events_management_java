@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -101,6 +102,7 @@ public class EventController {
     @GetMapping("/organizers")
     @Transactional
     public ResponseEntity<?> getOrganizersByEvent(@RequestParam String eventID) {
+        System.out.println("Event ID: " + eventID);
         if (eventID == null) {
             return ResponseEntity.badRequest().body("EventID is required.");
         }
@@ -117,7 +119,7 @@ public class EventController {
     // GET participants for a specific event
     @GetMapping("/participants")
     public List<Participant> getParticipants(@RequestParam String eventID) {
-        System.out.println("Event ID: " + eventID);
+        System.out.println("participant Event ID!!!!!!!!!!!!!: " + eventID);
 
         if (eventID == null || eventID.isEmpty()) {
             throw new IllegalArgumentException("EventID is required.");
@@ -218,6 +220,7 @@ public class EventController {
 
     @GetMapping("/GuestByID")
     public ResponseEntity<?> getGuestById(@RequestParam String guestID) {
+        System.out.println("guestID: " + guestID);
         if (guestID == null || guestID.trim().isEmpty()) {
             return ResponseEntity.badRequest().body("Guest ID is required.");
         }
@@ -251,7 +254,7 @@ public class EventController {
     @PostMapping("/signup")
     public ResponseEntity<String> signup(@RequestBody User user) {
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
-            throw new IllegalArgumentException("Password cannot be null or empty");
+            throw new IllegalArgumentException("An error occurred during signup");
         }
 
         if (user.getSrn() == null || user.getSrn().trim().isEmpty()) {
@@ -313,8 +316,10 @@ public class EventController {
     @PostMapping("/register")
     public ResponseEntity<String> registerForEvent(@RequestBody RegistrationRequest request) {
         String eventID = request.getEventID();
+        System.out.println("EventID: " + eventID);
         List<ParticipantDTO> participants = request.getParticipants();
         String teamName = request.getTeamName();
+        System.out.println("teamName: " + teamName);
 
         if (eventID == null || participants == null || participants.isEmpty()) {
             return ResponseEntity.badRequest().body("EventID and participant details are required.");
@@ -335,20 +340,40 @@ public class EventController {
             teamRepository.save(team);
         }
 
-        // Save each participant
         for (ParticipantDTO participantDTO : participants) {
-            ParticipantId participantId = new ParticipantId(participantDTO.getSrn(), eventID);
-            Participant participant = new Participant(participantId, participantDTO.getName(), participantDTO.getEmail(), teamID, participantDTO.getPhoneNo());
+            String srn = participantDTO.getSrn();
+            System.out.println("srn: " + srn);
+            String name = participantDTO.getName();
+            System.out.println("name: " + name);
+            String email = participantDTO.getEmail();
+            System.out.println("email: " + email);
+            String phoneNo = participantDTO.getPhoneNo();
+            System.out.println("phoneNo: " + phoneNo);
+    
+            if (srn == null || name == null || email == null || phoneNo == null || srn.isEmpty() || name.isEmpty() || email.isEmpty() || phoneNo.isEmpty()) {
+                return ResponseEntity.badRequest().body("All participant details are required.");
+            }
+
+            // Check if participant already exists
+            ParticipantId participantId = new ParticipantId(srn, eventID);
+            if (participantRepository.existsById(participantId)) {
+                return ResponseEntity.badRequest().body("Participant with SRN " + srn + " has already registered for this event.");
+            }
+
+            Participant participant = new Participant(participantId, name, email, teamID, phoneNo);
             participantRepository.save(participant);
         }
 
         return ResponseEntity.status(201).body("Registration successful.");
     }
+    
 
     @PostMapping("/addorganizer")
     public ResponseEntity<String> addOrganizer(@RequestBody OrganizerRequest request) {
         if (request.getSrn() == null || request.getEname() == null || request.getEcode() == null || 
-            request.getName() == null || request.getEmail() == null || request.getPhoneNo() == null) {
+            request.getName() == null || request.getEmail() == null || request.getPhoneNo() == null ||
+            request.getSrn().isEmpty() || request.getEname().isEmpty() || request.getEcode().isEmpty() || 
+            request.getName().isEmpty() || request.getEmail().isEmpty() || request.getPhoneNo().isEmpty()) {
             return ResponseEntity.badRequest().body("All fields are required.");
         }
 
@@ -396,10 +421,15 @@ public class EventController {
         String sponsorId = generateRandomId();
         SponsorId id = new SponsorId(sponsorId, sponsor.getId().getEventID());        
         sponsor.setId(id);
-                
-        sponsorRepository.save(sponsor);
-
-        return ResponseEntity.status(201).body("Sponsor added successfully with ID: " + sponsorId);
+        
+        try{
+            sponsorRepository.save(sponsor);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Sponsor details inserted successfully."));
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error inserting sponsor details: " + e.getMessage()));
+        }
     }
 
     // Random ID Generator (6-character alphanumeric)
@@ -414,15 +444,15 @@ public class EventController {
     }
 
     @PostMapping("/insertguest")
-    public String insertGuest(@RequestBody Guest guest) {
-        // System.out.println("Name: " + guest.getName());
-        // System.out.println("Email: " + guest.getEmail());
-        // System.out.println("Role: " + guest.getRole());
-        // System.out.println("Phone: " + guest.getPhone_no());
-        // System.out.println("eventID: " +guest.getGuestId().getEventID());
+    public ResponseEntity<?> insertGuest(@RequestBody Guest guest) {
+        System.out.println("Name: " + guest.getName());
+        System.out.println("Email: " + guest.getEmail());
+        System.out.println("Role: " + guest.getRole());
+        System.out.println("Phone: " + guest.getPhone_no());
+        System.out.println("eventID: " +guest.getGuestId().getEventID());
         if (guest.getName() == null || guest.getEmail() == null || guest.getRole() == null || 
             guest.getPhone_no() == null || guest.getGuestId().getEventID() == null) {
-            return "All guest details (Name, Email, Role, phone_no, EventID) are required.";
+                return ResponseEntity.badRequest().body("All guest details are required.");
         }
 
         // Generate a random Guest ID
@@ -433,24 +463,41 @@ public class EventController {
         Guest newGuest = new Guest(guestId, guest.getName(), guest.getEmail(), guest.getRole(), guest.getPhone_no());
 
         // Save to database
-        guestRepository.save(newGuest);
-
-        return "Guest added successfully with ID: " + guestID;
+        try{
+            guestRepository.save(newGuest);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Guest details inserted successfully."));
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error inserting guest details: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/insertfinance")
     public ResponseEntity<?> insertFinance(@RequestBody Finance finance) {
-        if (finance.getSpentOn() == null || finance.getAmount() == null || finance.getReceipt() == null || finance.getFinanceId().getEventID() == null) {
+        // System.out.println("spent on: " + finance.getSpentOn());
+        // System.out.println("amount: " + finance.getAmount());
+        // System.out.println("receipt: " + finance.getReceipt());
+        // System.out.println("event id: " + finance.getFinanceId().getEventID());
+
+        if (finance.getSpentOn() == null || finance.getAmount() == null || finance.getReceipt() == null) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("All finance details (SpentOn, Amount, Receipt, EventID) are required.");
         }
 
         String transID = generateRandomId();
+        System.out.println("transID: " + transID);
         FinanceId financeId = new FinanceId(transID, finance.getFinanceId().getEventID());
+        System.out.println("financeId: " + financeId);
 
-        Finance newfinance = new Finance(financeId, finance.getSpentOn(), finance.getAmount(), finance.getReceipt());
-        financeRepository.save(newfinance);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body("Finance details added successfully");
+        try{
+            Finance newfinance = new Finance(financeId, finance.getSpentOn(), finance.getAmount(), finance.getReceipt());
+            financeRepository.save(newfinance);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Finance details inserted successfully."));
+        }catch (Exception e){
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error inserting guest details: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/updateguest")
@@ -461,24 +508,26 @@ public class EventController {
 
         String guestId = updatedGuest.getGuestId().getId();
 
-        // Find the guest by ID (ignoring eventID)
-        Optional<Guest> existingGuestOpt = guestRepository.findByGuestId_Id(guestId);
-        if (existingGuestOpt.isEmpty()) {
-            return ResponseEntity.status(404).body("No guest found with the provided ID.");
+        try{
+            // Find the guest by ID (ignoring eventID)
+            Optional<Guest> existingGuestOpt = guestRepository.findByGuestId_Id(guestId);
+            Guest existingGuest = existingGuestOpt.get();
+
+            // Update only provided fields
+            if (updatedGuest.getName() != null) existingGuest.setName(updatedGuest.getName());
+            if (updatedGuest.getEmail() != null) existingGuest.setEmail(updatedGuest.getEmail());
+            if (updatedGuest.getRole() != null) existingGuest.setRole(updatedGuest.getRole());
+            if (updatedGuest.getPhone_no() != null) existingGuest.setPhone_no(updatedGuest.getPhone_no());
+
+            // Save the updated guest
+            guestRepository.save(existingGuest);
+
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+                "Guest details updated successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error updating guest details: " + e.getMessage()));
         }
-
-        Guest existingGuest = existingGuestOpt.get();
-
-        // Update only provided fields
-        if (updatedGuest.getName() != null) existingGuest.setName(updatedGuest.getName());
-        if (updatedGuest.getEmail() != null) existingGuest.setEmail(updatedGuest.getEmail());
-        if (updatedGuest.getRole() != null) existingGuest.setRole(updatedGuest.getRole());
-        if (updatedGuest.getPhone_no() != null) existingGuest.setPhone_no(updatedGuest.getPhone_no());
-
-        // Save the updated guest
-        guestRepository.save(existingGuest);
-
-        return ResponseEntity.ok("Guest details updated successfully.");
     }
 
     @PostMapping("/updatesponsor")
@@ -489,29 +538,35 @@ public class EventController {
 
         String sponsorId = updatedSponsor.getId().getId(); // Extract only Sponsor ID
 
-        // Find sponsor by Sponsor ID
-        Optional<Sponsor> existingSponsorOpt = sponsorRepository.findById_Id(sponsorId);
-        if (existingSponsorOpt.isEmpty()) {
-            return ResponseEntity.status(404).body("No sponsor found with the provided ID.");
+        try{
+            // Find sponsor by Sponsor ID
+            Optional<Sponsor> existingSponsorOpt = sponsorRepository.findById_Id(sponsorId);
+            Sponsor existingSponsor = existingSponsorOpt.get();
+
+            // Update only if new values are provided
+            if (updatedSponsor.getName() != null) existingSponsor.setName(updatedSponsor.getName());
+            if (updatedSponsor.getEmail() != null) existingSponsor.setEmail(updatedSponsor.getEmail());
+            if (updatedSponsor.getContribution() != null) existingSponsor.setContribution(updatedSponsor.getContribution());
+            if (updatedSponsor.getPhoneNo() != null) existingSponsor.setPhoneNo(updatedSponsor.getPhoneNo());
+
+            // Save the updated sponsor
+            sponsorRepository.save(existingSponsor);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+                "Sponsor details updated successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error updating sponsor details: " + e.getMessage()));
         }
-
-        Sponsor existingSponsor = existingSponsorOpt.get();
-
-        // Update only if new values are provided
-        if (updatedSponsor.getName() != null) existingSponsor.setName(updatedSponsor.getName());
-        if (updatedSponsor.getEmail() != null) existingSponsor.setEmail(updatedSponsor.getEmail());
-        if (updatedSponsor.getContribution() != null) existingSponsor.setContribution(updatedSponsor.getContribution());
-        if (updatedSponsor.getPhoneNo() != null) existingSponsor.setPhoneNo(updatedSponsor.getPhoneNo());
-
-        // Save the updated sponsor
-        sponsorRepository.save(existingSponsor);
-
-        return ResponseEntity.ok("Sponsor details updated successfully.");
     }
 
+    
     @PostMapping("/updatefinance")
     public ResponseEntity<?> updateFinance(@RequestBody Finance request) {
         // Extract values from request
+        // System.out.println("spent on: " + request.getSpentOn());
+        // System.out.println("amount: " + request.getAmount());
+        // System.out.println("receipt: " + request.getReceipt());
+
         String transID = request.getFinanceId().getTransID();
         String spentOn = request.getSpentOn();
         String receipt = request.getReceipt();
@@ -524,23 +579,22 @@ public class EventController {
             return ResponseEntity.badRequest().body("All finance details (ID, SpentOn, Amount, Receipt) are required.");
         }
 
-        // Find the existing finance record by TransID
-        Optional<Finance> optionalFinance = financeRepository.findByFinanceId_TransID(transID);
-        if (optionalFinance.isEmpty()) {
-            return ResponseEntity.status(404).body("No finance record found with the provided ID.");
+        try{
+            // Find the existing finance record by TransID
+            Optional<Finance> optionalFinance = financeRepository.findByFinanceId_TransID(transID);
+            Finance finance = optionalFinance.get();
+            // Update finance details
+            finance.setSpentOn(spentOn);
+            finance.setAmount(request.getAmount());
+            finance.setReceipt(receipt);
+            // Save updated record
+            financeRepository.save(finance);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Finance details updated successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error updating finance details: " + e.getMessage()));
         }
-
-        Finance finance = optionalFinance.get();
-
-        // Update finance details
-        finance.setSpentOn(spentOn);
-        finance.setAmount(request.getAmount());
-        finance.setReceipt(receipt);
-
-        // Save updated record
-        financeRepository.save(finance);
-
-        return ResponseEntity.ok().body("Finance details updated successfully.");
     }
 
 
@@ -558,16 +612,15 @@ public class EventController {
     
         System.out.println("TransID: " + transID + ", EventID: " + eventID);
     
-        // Check if the finance record exists
-        boolean exists = financeRepository.findByFinanceId_TransIDAndFinanceId_EventID(transID, eventID).isPresent();
-        
-        if (!exists) {
-            return ResponseEntity.status(404).body("Finance details not found for TransID: " + transID + " and EventID: " + eventID);
-        }
-    
         // Perform deletion
-        financeRepository.deleteByFinanceId_TransIDAndFinanceId_EventID(transID, eventID);
-        return ResponseEntity.ok("Finance details deleted successfully for TransID: " + transID + " and EventID: " + eventID);
+        try{
+            financeRepository.deleteByFinanceId_TransIDAndFinanceId_EventID(transID, eventID);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Finance details deleted successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error deleting finance details: " + e.getMessage()));
+        }
     }
     
 
@@ -585,16 +638,15 @@ public class EventController {
     
         System.out.println("SponsorID: " + sponsorID + ", EventID: " + eventID);
     
-        // Check if the sponsor exists with the given SponsorID and EventID
-        boolean exists = sponsorRepository.findById_IdAndId_EventID(sponsorID, eventID).isPresent();
-    
-        if (!exists) {
-            return ResponseEntity.status(404).body("Sponsor details not found for SponsorID: " + sponsorID + " and EventID: " + eventID);
-        }
-    
         // Perform deletion
-        sponsorRepository.deleteById_IdAndId_EventID(sponsorID, eventID);
-        return ResponseEntity.ok("Sponsor details deleted successfully for SponsorID: " + sponsorID + " and EventID: " + eventID);
+        try{
+            sponsorRepository.deleteById_IdAndId_EventID(sponsorID, eventID);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Sponsor details deleted successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error deleting sponsor details: " + e.getMessage()));
+        }
     }
 
 
@@ -612,16 +664,15 @@ public class EventController {
     
         System.out.println("GuestID: " + guestID + ", EventID: " + eventID);
     
-        // Check if guest exists with both GuestID and EventID
-        boolean exists = guestRepository.findByGuestId_IdAndGuestId_EventID(guestID, eventID).isPresent();
-    
-        if (!exists) {
-            return ResponseEntity.status(404).body("Guest not found for GuestID: " + guestID + " and EventID: " + eventID);
-        }
-    
         // Perform deletion
-        guestRepository.deleteByGuestId_IdAndGuestId_EventID(guestID, eventID);
-        return ResponseEntity.ok("Guest details deleted successfully for GuestID: " + guestID + " and EventID: " + eventID);
+        try{
+            guestRepository.deleteByGuestId_IdAndGuestId_EventID(guestID, eventID);
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Guest details deleted successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error deleting guest details: " + e.getMessage()));
+        }
     }
 
 
@@ -634,17 +685,15 @@ public class EventController {
             return ResponseEntity.badRequest().body("SRN and EventID are required to delete the organizer.");
         }
     
-        // Check if the organizer exists in `organized_by`
-        boolean exists = organizedByRepository.existsById(id);
-    
-        if (!exists) {
-            return ResponseEntity.status(404).body("No entry found for the provided SRN and EventID in the organized_by table.");
-        }
-    
         // Delete organizer from `organized_by`
-        organizedByRepository.deleteById(id); // Now correctly passing an OrganizedById object
-    
-        return ResponseEntity.ok("Organizer entry deleted successfully for SRN: " + id.getSrn());
+        try{
+            organizedByRepository.deleteById(id); // Now correctly passing an OrganizedById object
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Organizer with SRN: " + id.getSrn() + " deleted successfully."));
+        }catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error deleting organizer: " + e.getMessage()));
+        }
     }
 
 
@@ -660,9 +709,11 @@ public class EventController {
 
         try {
             participantRepository.deleteById_SrnAndId_EventID(srn, eventID);
-            return ResponseEntity.ok("Participant with SRN: " + srn + " and eventID: " + eventID + " deleted successfully.");
+            return ResponseEntity.ok().body(Collections.singletonMap("message", 
+            "Participant with SRN: " + srn + " deleted successfully."));
         } catch (Exception e) {
-            return ResponseEntity.internalServerError().body("Error deleting participant: " + e.getMessage());
+            return ResponseEntity.internalServerError().body(Collections.singletonMap("message",
+            "Error deleting participant: " + e.getMessage()));
         }
     }
 

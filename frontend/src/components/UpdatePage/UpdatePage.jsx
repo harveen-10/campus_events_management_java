@@ -16,13 +16,13 @@ function UpdatePage() {
 
         switch (currentUser.tab) {
             case 'sponsors':
-                url = `http://localhost:3000/sponsorByID?ID=${currentUser.ID}`;
+                url = `http://localhost:8080/events/sponsorByID?sponsorID=${currentUser.ID}`;
                 break;
             case 'guests':
-                url = `http://localhost:3000/GuestByID?ID=${currentUser.ID}`;
+                url = `http://localhost:8080/events/GuestByID?guestID=${currentUser.ID}`;
                 break;
             case 'finances':
-                url = `http://localhost:3000/FinanceByID?TransID=${currentUser.ID}`;
+                url = `http://localhost:8080/events/FinanceByID?transID=${currentUser.ID}`;
                 break;
             default:
                 alert("Invalid tab selected.");
@@ -30,6 +30,7 @@ function UpdatePage() {
         }
 
         const fetchData = async () => {
+            console.log("url: ", url);
             try {
                 const response = await fetch(url, {
                     method: "GET",
@@ -43,10 +44,10 @@ function UpdatePage() {
                 }
 
                 const data = await response.json();
-                console.log("data after getting in update page: ", data[0]);
+                console.log("data after getting in update page: ", data);
                 setFormData((prevFormData) => ({
                     ...prevFormData,
-                    ...data[0],
+                    ...data,
                 }));
                 console.log("form data after setting it: ", formData);
             } catch (err) {
@@ -69,13 +70,13 @@ function UpdatePage() {
 
         switch (currentUser.tab) {
             case 'sponsors':
-                url = 'http://localhost:3000/sponsorupdate';
+                url = 'http://localhost:8080/events/updatesponsor';
                 break;
             case 'guests':
-                url = 'http://localhost:3000/guestupdate';
+                url = 'http://localhost:8080/events/updateguest';
                 break;
             case 'finances':
-                url = 'http://localhost:3000/financeupdate';
+                url = 'http://localhost:8080/events/updatefinance';
                 break;
             default:
                 alert("Invalid tab selected.");
@@ -92,16 +93,13 @@ function UpdatePage() {
                 body: JSON.stringify(formData),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to insert data');
+            if (response.ok) {
+                const data = await response.json();
+                alert(data.message);
+
+                const srn = { srn: currentUser.srn };
+                navigate("/event_info", { state: { srn } });
             }
-
-            const data = await response.json();
-            alert(data.message);
-
-            const srn = { srn: currentUser.srn };
-            navigate("/event_info", { state: { srn } });
-
         } catch (error) {
             console.error("Error inserting data:", error);
             setError("An error occurred while inserting data.");
@@ -120,9 +118,9 @@ function UpdatePage() {
                             <label className="font-semibold">Name</label>
                             <input
                                 type="text"
-                                name="Name"
+                                name="name"
                                 placeholder="Name"
-                                value={formData.Name || ''}
+                                value={formData.name || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -130,9 +128,9 @@ function UpdatePage() {
                             <label className="font-semibold">Email</label>
                             <input
                                 type="email"
-                                name="Email"
+                                name="email"
                                 placeholder="Email"
-                                value={formData.Email || ''}
+                                value={formData.email || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -140,9 +138,9 @@ function UpdatePage() {
                             <label className="font-semibold">Contribution</label>
                             <input
                                 type="text"
-                                name="Contribution"
+                                name="contribution"
                                 placeholder="Contribution"
-                                value={formData.Contribution || ''}
+                                value={formData.contribution || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -150,9 +148,9 @@ function UpdatePage() {
                             <label className="font-semibold">Phone Number</label>
                             <input
                                 type="text"
-                                name="phone_no"
+                                name="phoneNo"
                                 placeholder="Phone Number"
-                                value={formData.phone_no || ''}
+                                value={formData.phoneNo || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -164,9 +162,9 @@ function UpdatePage() {
                             <label className="font-semibold">Name</label>
                             <input
                                 type="text"
-                                name="Name"
+                                name="name"
                                 placeholder="Name"
-                                value={formData.Name || ''}
+                                value={formData.name || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -174,9 +172,9 @@ function UpdatePage() {
                             <label className="font-semibold">Email</label>
                             <input
                                 type="email"
-                                name="Email"
+                                name="email"
                                 placeholder="Email"
-                                value={formData.Email || ''}
+                                value={formData.email || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -184,9 +182,9 @@ function UpdatePage() {
                             <label className="font-semibold">Role</label>
                             <input
                                 type="text"
-                                name="Role"
+                                name="role"
                                 placeholder="Role"
-                                value={formData.Role || ''}
+                                value={formData.role || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -208,9 +206,9 @@ function UpdatePage() {
                             <label className="font-semibold">Spent On</label>
                             <input
                                 type="text"
-                                name="SpentOn"
+                                name="spentOn"
                                 placeholder="Spent on"
-                                value={formData.SpentOn || ''}
+                                value={formData.spentOn || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -218,9 +216,9 @@ function UpdatePage() {
                             <label className="font-semibold">Amount</label>
                             <input
                                 type="number"
-                                name="Amount"
+                                name="amount"
                                 placeholder="Amount"
-                                value={formData.Amount || ''}
+                                value={formData.amount || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -228,9 +226,9 @@ function UpdatePage() {
                             <label className="font-semibold">Receipt</label>
                             <input
                                 type="text"
-                                name="Receipt"
+                                name="receipt"
                                 placeholder="Receipt"
-                                value={formData.Receipt || ''}
+                                value={formData.receipt || ''}
                                 onChange={handleChange}
                                 required
                                 className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"

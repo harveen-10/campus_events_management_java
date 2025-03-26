@@ -13,7 +13,7 @@ function Organize_event() {
         ecode: '',
         name: '',
         email: '',
-        phone_no: '',
+        phoneNo: '',
     });
     const [events, setEvents] = useState([]); // Ensure events is an array initially
     const [message, setMessage] = useState('');
@@ -21,7 +21,7 @@ function Organize_event() {
     useEffect(() => {
         const fetchEvents = async () => {
             try {
-                const response = await fetch("http://localhost:3000/home", {
+                const response = await fetch("http://localhost:8080/events/home", {
                     method: "GET",
                     headers: {
                         'Content-Type': "application/json",
@@ -33,10 +33,11 @@ function Organize_event() {
                 }
 
                 const data = await response.json();
-                console.log(data)
+                console.log(data);
                 
                 // Check if data is an array, otherwise set an empty array
-                setEvents(Array.isArray(data.products) ? data.products : []);
+                setEvents(data);
+                console.log("events: ", events);
             } catch (error) {
                 console.error('Error fetching events: ', error);
                 setEvents([]); // Set events to an empty array in case of an error
@@ -59,7 +60,7 @@ function Organize_event() {
         console.log(organizerDetails);
     
         try {
-            const response = await fetch("http://localhost:3000/addorganizer", {
+            const response = await fetch("http://localhost:8080/events/addorganizer", {
                 method: "POST",
                 headers: {
                     'Content-Type': 'application/json',
@@ -124,8 +125,8 @@ function Organize_event() {
                         >
                             <option value="">Select an event</option>
                             {events.length > 0 && events.map((event) => (
-                                <option key={event.EventID} value={event.Ename}>
-                                    {event.Ename}
+                                <option key={event.eventId} value={event.ename}>
+                                    {event.ename}
                                 </option>
                             ))}
                         </select>
@@ -171,12 +172,12 @@ function Organize_event() {
                     </div>
 
                     <div>
-                        <label htmlFor="phone_no" className="block text-gray-600">Phone Number:</label>
+                        <label htmlFor="phoneNo" className="block text-gray-600">Phone Number:</label>
                         <input
                             type="tel"
-                            id="phone_no"
-                            name="phone_no"
-                            value={organizerDetails.phone_no}
+                            id="phoneNo"
+                            name="phoneNo"
+                            value={organizerDetails.phoneNo}
                             onChange={handleInputChange}
                             required
                             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:border-indigo-500"

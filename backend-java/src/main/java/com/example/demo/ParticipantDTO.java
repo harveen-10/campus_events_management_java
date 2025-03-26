@@ -1,9 +1,13 @@
 package com.example.demo;
 
+import jakarta.persistence.*;
+import java.util.Objects;
+
 public class ParticipantDTO {
     private String srn;
     private String name;
     private String email;
+    @Column(name = "\"phone_no\"", length = 10) 
     private String phoneNo;
 
     // Getters and Setters

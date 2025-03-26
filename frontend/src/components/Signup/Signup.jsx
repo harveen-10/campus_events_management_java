@@ -18,7 +18,7 @@ function Signup() {
         console.log(user);
 
         try{
-            const response=await fetch(`http://localhost:3000/signup`, {
+            const response=await fetch(`http://localhost:8080/events/signup`, {
                 method: "POST",
                 headers: {
                     'Content-Type': "application/json",
@@ -27,8 +27,9 @@ function Signup() {
             });
 
             const responseData = await response.text();
+            console.log(responseData);
             
-            if(responseData==="This SRN already exists. Try logging in." || responseData==="SRN is required" || responseData==="An error occurred during signup"){
+            if(responseData==="This SRN already exists. Try logging in." || responseData==="SRN is required"){
                 setResponseMessage(responseData);
             }
             else if(response.ok){
