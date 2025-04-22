@@ -6,8 +6,6 @@
 
 ``` npm run dev ```
 
-## Ignore the backend folder while running.
-
 
 ### In backend-java/src/main/resources/application.properties-
 
